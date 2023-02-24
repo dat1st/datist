@@ -1,0 +1,41 @@
+{
+    "name": "ZDatist",
+    "version": "0.2.0",
+    "manifest_version": 3,
+    "description": "Datist assistant for scientific forensic research",
+    "homepage_url": "https://github.com/dat1st/datist",
+    "minimum_chrome_version": "88",
+    "icons": {
+        "128": "icons/128.png",
+        "32": "icons/32.png"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_end"
+        }
+    ],
+    "background": {
+        "service_worker": "worker.js"
+    },
+    "permissions": [
+        "storage",
+        "activeTab",
+        "offscreen",
+        "cookies",
+        "webRequest"
+    ],
+    "host_permissions": [
+        "*://*/*",
+        "<all_urls>"
+    ],
+    "options_ui": {
+        "page": "options/options.html",
+        "open_in_tab": false
+    }
+}

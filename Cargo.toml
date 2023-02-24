@@ -1,0 +1,33 @@
+[package]
+name = "datist"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = { version = "0.6.7", features = ["macros"] }
+futures = "0.3.26"
+handlebars = "4.3.6"
+mime_guess = "2.0.4"
+rocksdb = { version = "0.20.1", features = ["multi-threaded-cf", "serde"] }
+serde = { version = "1.0.152", features = ["derive"] }
+simd-json = "0.7.0"
+tokio = { version = "1.25.0", features = ["rt-multi-thread", "macros", "sync", "fs", "io-std", "io-util", "bytes"] }
+tokio-util = { version = "0.7.7", features = ["io"] }
+tower-http = { version = "0.3.5", features = ["fs", "mime", "mime_guess", "compression-full", "tokio", "tokio-util"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+uuid = { version = "1.3.0", features = ["serde", "v4", "fast-rng"] }
+
+[profile.release]
+panic = "abort"
+lto = true
+codegen-units = 1
+opt-level = 3
+strip = "symbols"
+#panic = "abort"
+#lto = true
+#codegen-units = 1
+#opt-level = "z"
+#strip = "debuginfo"

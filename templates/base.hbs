@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{{> title}}dat.ist{{> subpath}}</title>
+        <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/fontawesome/webfonts/fa-solid-900.woff2">
+        <link rel="stylesheet" href="/assets/style.css">
+        <link href="/assets/fontawesome/css/all.min.css" rel="stylesheet">
+
+        <meta name="description" content="{{> og_description}} - {{> og_title}}">
+        <link rel="canonical" href="https://dat.ist/{{> og_url}}">
+
+        <meta name="mobile-wep-app-capable" content="yes">
+        <meta name="apple-mobile-wep-app-capable" content="yes">
+
+        <link rel="manifest" href="/assets/manifest/manifest.webmanifest">
+
+        {{~> heads}}
+    </head>
+    <body>
+        <header>
+            <h1 class="center"><a href="/">dat.ist {{> subpath}}</a></h1>
+            <nav>
+                <p class="center">
+                    <!--<a href="/">[ home ]</a> <a href="/login">[ login ]</a> <a href="/onboard">[ register ]</a>-->
+                </p>
+            </nav>
+        </header>
+
+        {{~> page}}
+    </body>
+</html>

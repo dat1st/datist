@@ -1,0 +1,7 @@
+dist/
+.wire/
+node_modules/
+.idea/
+target/
+/db/
+.DS_Store

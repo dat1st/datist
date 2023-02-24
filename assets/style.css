@@ -1,0 +1,298 @@
+html {
+    height: 100%;
+}
+
+body {
+    background-color: black;
+    color: #00aa00;
+    font-family: monospace;
+    max-width: 900px;
+    margin: 20px auto;
+    font-size: 14px;
+    line-height: 18px;
+    height: 100%;
+    max-height: 50vh;
+}
+
+input {
+    border: 1px solid #00aa00;
+    padding: 10px 15px;
+    background: black;
+    color: #00aa00;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+h1 a {
+    text-decoration: none;
+    color: #00aa00;
+}
+
+a {
+    text-decoration: none;
+    color: #00aa00;
+}
+
+a:hover {
+    font-weight: bold;
+}
+
+.copy {
+    cursor: pointer;
+}
+
+.code {
+    background-color: #222;
+    padding: 10px;
+}
+
+.show {
+    display: initial;
+}
+
+.center {
+    text-align: center;
+}
+
+.modules {
+    list-style: none;
+    padding: 0;
+    word-break: break-word;
+}
+
+.modules li {
+    padding: 2px 5px;
+    margin: 1px 0;
+    background-color: #222;
+}
+
+.modules li .copy {
+    display: none;
+}
+
+.modules li:hover .copy {
+    display: inline;
+}
+
+.mod-cell {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.mod-name {
+    width: 35%;
+}
+
+.mod-name a {
+    text-decoration: none;
+    color: #00cc00;
+    font-weight: bold;
+}
+
+.mod-version {
+    width: 15%;
+}
+
+.mod-descr {
+    width: 50%;
+}
+
+.noscript-hidden {
+    display: none !important;
+}
+
+pre {
+    white-space: pre-wrap;
+}
+
+.source .comment {
+    color: #2179d7;
+}
+
+.source .control, .source .operator {
+    color: #caca47;
+}
+
+.source .string, .source .constant {
+    color: #d90000;
+}
+
+@media (display-mode: standalone) {
+    header {
+        display: none;
+    }
+
+    main.main {
+        display: none;
+    }
+}
+
+#main, main, .flex-center {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100%;
+}
+
+main #onboard-msg {
+    display: none;
+}
+
+main p.top {
+    position: sticky;
+    top: 0;
+}
+
+main .onboard-box {
+    display: flex;
+    flex-flow: row;
+}
+
+.onboard-box .box {
+    height: 100%;
+    margin: 0 1em;
+}
+
+.onboard-box .init {
+}
+
+.onboard-box .login {
+}
+
+.login .login-buttons {
+    display: flex;
+    flex-flow: row;
+}
+
+.user-box-outer {
+    display: flex;
+    flex-flow: column;
+    justify-content: space-between;
+    align-content: space-between;
+    align-items: center;
+    gap: 1em;
+    height: 100%;
+}
+
+.user-box-outer .list-nav {
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
+    align-content: space-between;
+    align-items: center;
+    gap: 1em;
+    width: 100%;
+    margin-bottom: 1em;
+}
+
+.user-box-outer .list-nav button {
+    background-color: #00aa00;
+    border: none;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.user-box-inner {
+    display: flex;
+    flex-flow: row;
+    justify-content: center;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    gap: 1em;
+}
+
+.user-box-inner > div {
+    flex: 1;
+    column-gap: 1em;
+    row-gap: 1em;
+}
+
+.user-box-inner input[type="button"] {
+    display: flex;
+    flex-flow: row;
+}
+
+.overflow-dots {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.overflow-dots pre {
+    white-space: pre;
+}
+
+.list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    min-width: 100%;
+    max-width: 80vw;
+}
+
+.list-item {
+    background-color: #222;
+    border: 1px solid #00aa00;
+    padding: 10px;
+    margin-bottom: 5px;
+}
+
+.list-item-header {
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
+    align-content: center;
+    align-items: center;
+    gap: 1em;
+    margin-bottom: 2px;
+}
+
+.list-item-header .list-item-header-right-wrap {
+    display: flex;
+    flex-flow: column;
+    justify-content: right;
+    justify-items: right;
+    text-align: right;
+    gap: 1px;
+}
+
+.list-item-header-right-wrap .list-item-header-action-wrap {
+    display: flex;
+    flex-flow: row;
+    justify-content: right;
+    justify-items: right;
+    text-align: right;
+    gap: 1px;
+}
+
+.list-item-header-right-wrap .list-item-info-label {
+    background-color: #00aa00;
+    color: #222;
+    font-weight: bold;
+    margin-right: 0;
+    white-space: nowrap;
+    padding: 2px 5px;
+}
+
+.list-item-header .list-item-header-label {
+    cursor: pointer;
+    color: #00cc00;
+    font-weight: bold;
+}
+
+.list-item-body {
+    margin-top: 5px;
+    color: #00aa00;
+}
+
+.list-item-body pre {
+    overflow: scroll;
+}
+
+.list-item.open .list-item-body {
+    display: block;
+}
