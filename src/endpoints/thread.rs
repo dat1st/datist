@@ -214,3 +214,20 @@ pub async fn thread_xhrstream_list_entries(
         )
     )
 }
+
+pub async fn thread_get_entriesx(
+    State((_, repo)): State<(Handlebars<'_>, DynDatistRepo)>,
+    Path((user_id, thread_id, page)): Path<(Uuid, Uuid, u32)>,
+) -> Result<impl IntoResponse, AppError> {
+    println!("Finding thread entries for user {}: {} page {}", user_id, thread_id, page);
+
+    Ok(
+        Json(
+            repo.thread_get_entries(
+                user_id,
+                thread_id,
+                page,
+            ).await?
+        )
+    )
+}

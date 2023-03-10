@@ -5,6 +5,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { ThreadEntry } from '../types';
 import { PathType } from '../util/url-hash';
 import { dumpKeychainEntry } from '../util/user-helpers';
+import { NavButtons } from './util/header-nav';
 
 const ITEMS_PER_PAGE = 3;
 
@@ -173,33 +174,13 @@ export const ThreadBox = () => {
         fetchEntries();
     }, [ hash?.page, epoch ]);
 
-    const goToKeychain = () => {
-        setHash({
-            ...hash!,
-            type: PathType.UserThreadKeychain,
-            page: null,
-        });
-    };
-
-    const goToStream = () => {
-        setHash({
-            ...hash!,
-            type: PathType.UserThreadStream,
-            page: null,
-        });
-    };
-
     return (
         <div class="user-box-outer">
             <div class="center">
                 User: { hash?.userId }<br />
                 Thread: { hash?.threadId }
             </div>
-            <div class="user-box-inner">
-                <input type="button" value="entries" disabled />
-                <input type="button" value="stream" onClick={ goToStream } />
-                <input type="button" value="origin stores" onClick={ goToKeychain } />
-            </div>
+            <NavButtons />
             <div class="list-nav">
                 <button onClick={ handleReload }>Reload</button>
                 <div class="pagination-buttons">

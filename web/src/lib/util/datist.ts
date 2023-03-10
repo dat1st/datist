@@ -9,7 +9,8 @@ import {
     User,
 } from '../types';
 
-const API_BASE_URL = 'https://dat.ist';
+//const API_BASE_URL = 'https://dat.ist';
+const API_BASE_URL = '';
 
 // POST /user
 export const user_create = (): Promise<User> =>

@@ -4,9 +4,48 @@ import { thread_xhrstream_get_entries } from '../util/datist';
 import { useEffect, useState } from 'preact/hooks';
 import { PathType } from '../util/url-hash';
 import { ThreadXhrStreamEntry } from '../types';
+import { dumpKeychainEntry } from '../util/user-helpers';
+import { NavButtons } from './util/header-nav';
+
+const parseEntry = (item: any) => {
+    try {
+        const out = JSON.parse(atob(item));
+
+        if (out.formData) {
+            return out.formData;
+        } else {
+            return out;
+        }
+    } catch (e) {
+        try {
+            return atob(item);
+        } catch(e) {
+            return item;
+        }
+    }
+};
+
+const processEntry = (entry: ThreadXhrStreamEntry) => {
+    if (entry.data.formData) {
+        return parseEntry(entry.data.formData);
+    }
+
+    if (entry.data.raw) {
+        return entry.data.raw.map(parseEntry);
+    }
+
+    return null;
+}
 
 export const ThreadXhrStreamItem = (item: ThreadXhrStreamEntry) => {
     const [ hash, _ ] = useParsedHash();
+
+    const [ payloadExpanded, setPayloadExpanded ] = useState(false);
+
+    const rtype = item.data.raw ? 'raw' : 'formData';
+    const pitem = processEntry(item);
+
+    const size = JSON.stringify(pitem).length;
 
     const date = new Date(item.created_utc! / 1000);
 
@@ -15,12 +54,32 @@ export const ThreadXhrStreamItem = (item: ThreadXhrStreamEntry) => {
             <div class="list-item-header" onClick={ () => console.log(`Toggle row ${ item.id }`) }>
                 <div class="list-item-header-label overflow-dots">
                     <a href={ item.url } alt={ item.url } target="_blank">{ item.url }</a>
+                    <br/>{rtype} - {size}
                 </div>
                 <div class="list-item-header-right-wrap">
                     <div class="list-item-info-label">
                         { date.toISOString() }
                     </div>
                 </div>
+            </div>
+            <div class="list-item-body">
+                <ul class="list">
+                    <li className="list-item">
+                        <div className="list-item-header">
+                            <div className="list-item-header-label"
+                                 onClick={ () => setPayloadExpanded(!payloadExpanded) }>
+                                Payload ⬇
+                            </div>
+                        </div>
+                        <div className="list-item-body"
+                             style={ !payloadExpanded ? { display: 'none' } : {} }
+                        >
+                            <pre>
+                                { JSON.stringify(pitem, null, 4) }
+                            </pre>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </li>
     );
@@ -65,33 +124,13 @@ export const ThreadStreamBox = () => {
         fetchEntries();
     }, [ hash?.page ]);
 
-    const goToEntries = () => {
-        setHash({
-            ...hash!,
-            type: PathType.UserThread,
-            page: null,
-        });
-    };
-
-    const goToKeychain = () => {
-        setHash({
-            ...hash!,
-            type: PathType.UserThreadKeychain,
-            page: null,
-        });
-    };
-
     return (
         <div class="user-box-outer">
             <div class="center">
                 User: { hash?.userId }<br />
                 Thread: { hash?.threadId }
             </div>
-            <div class="user-box-inner">
-                <input type="button" value="entries" onClick={ goToEntries } />
-                <input type="button" value="stream" disabled />
-                <input type="button" value="origin stores" onClick={ goToKeychain } />
-            </div>
+            <NavButtons />
             <div class="list-nav">
                 <button onClick={ handleReload }>Reload</button>
                 <div class="pagination-buttons">

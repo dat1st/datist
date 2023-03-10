@@ -5,6 +5,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { KeychainEntry } from '../types';
 import { PathType } from '../util/url-hash';
 import { dumpKeychainEntry } from '../util/user-helpers';
+import { NavButtons } from './util/header-nav';
 
 export const ThreadKeychainListEntry = (item: KeychainEntry) => {
     const [ hash, _ ] = useParsedHash();
@@ -100,33 +101,13 @@ export const ThreadKeychainBox = () => {
         fetchEntries();
     }, [ hash?.page ]);
 
-    const goToEntries = () => {
-        setHash({
-            ...hash!,
-            type: PathType.UserThread,
-            page: null,
-        });
-    };
-
-    const goToStream = () => {
-        setHash({
-            ...hash!,
-            type: PathType.UserThreadStream,
-            page: null,
-        });
-    };
-
     return (
         <div class="user-box-outer">
             <div class="center">
                 User: { hash?.userId }<br />
                 Thread: { hash?.threadId }
             </div>
-            <div class="user-box-inner">
-                <input type="button" value="entries" onClick={ goToEntries } />
-                <input type="button" value="stream" onClick={ goToStream } />
-                <input type="button" value="origin stores" disabled />
-            </div>
+            <NavButtons />
             <div class="list-nav">
                 <button onClick={ handleReload }>Reload</button>
                 <div class="pagination-buttons">
