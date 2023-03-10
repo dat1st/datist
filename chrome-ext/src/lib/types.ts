@@ -44,20 +44,22 @@ export interface KeychainPayloadStorages {
     s: Record<string, string>;
 }
 
+type CookieType = Parameters<typeof chrome.cookies.set>[0];
+
 export type CookieStore = Cookie[];
 
 export interface Cookie {
-    domain: string
-    expirationDate?: number
-    hostOnly: boolean
-    httpOnly: boolean
-    name: string
-    path: string
-    sameSite: string
-    secure: boolean
-    session: boolean
-    storeId: string
-    value: string
+    domain: string;
+    name: string;
+    storeId: string;
+    value: string;
+    session: boolean;
+    hostOnly: boolean;
+    expirationDate?: number | undefined;
+    path: string;
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: CookieType['sameSite'];
 }
 
 export interface ThreadXhrStreamEntry {

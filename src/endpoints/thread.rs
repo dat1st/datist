@@ -1,7 +1,9 @@
+use std::collections::{BTreeSet, HashSet};
 use axum::extract::{Path, State};
 use axum::Json;
 use axum::response::IntoResponse;
 use handlebars::Handlebars;
+use url::Host;
 use uuid::Uuid;
 
 use crate::AppError;
@@ -215,19 +217,48 @@ pub async fn thread_xhrstream_list_entries(
     )
 }
 
-pub async fn thread_get_entriesx(
+pub async fn thread_reconcile_cs(
     State((_, repo)): State<(Handlebars<'_>, DynDatistRepo)>,
-    Path((user_id, thread_id, page)): Path<(Uuid, Uuid, u32)>,
+    Path((user_id, thread_id)): Path<(Uuid, Uuid)>,
 ) -> Result<impl IntoResponse, AppError> {
-    println!("Finding thread entries for user {}: {} page {}", user_id, thread_id, page);
+    let mut urls = BTreeSet::new();
 
-    Ok(
-        Json(
+    let mut page = 0;
+    let mut has_entries = true;
+
+    while has_entries {
+        let entries =
             repo.thread_get_entries(
                 user_id,
                 thread_id,
                 page,
-            ).await?
+            ).await?;
+
+        for entry in entries.iter() {
+            let origin = url::Url::parse(&entry.url);
+
+            if origin.is_err() {
+                continue;
+            }
+
+            let origin = origin.unwrap();
+
+            match origin.host() {
+                Some(Host::Domain(domain)) => {
+                    urls.insert(format!("{}://{}/", origin.scheme(), domain));
+                },
+                _ => {},
+            }
+        }
+
+        has_entries = entries.len() > 0;
+
+        page += 1;
+    }
+
+    Ok(
+        Json(
+            urls,
         )
     )
 }

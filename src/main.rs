@@ -18,7 +18,7 @@ use simd_json::json;
 use tower_http::services::ServeDir;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::endpoints::thread::{thread_add_entry, thread_cookie_store_get, thread_cookie_store_set, thread_create, thread_find, thread_get_entries, thread_keychain_add_entry, thread_keychain_add_url_filter, thread_keychain_get_entry, thread_keychain_has_entry, thread_keychain_list_entries, thread_xhrstream_add_entry, thread_xhrstream_list_entries};
+use crate::endpoints::thread::{thread_add_entry, thread_cookie_store_get, thread_cookie_store_set, thread_create, thread_find, thread_get_entries, thread_keychain_add_entry, thread_keychain_add_url_filter, thread_keychain_get_entry, thread_keychain_has_entry, thread_keychain_list_entries, thread_reconcile_cs, thread_xhrstream_add_entry, thread_xhrstream_list_entries};
 use crate::endpoints::user::{user_create, user_find};
 use crate::types::{DatistRepoError, DynDatistRepo, ThreadRepo};
 
@@ -69,6 +69,7 @@ async fn main() {
         .route("/user", post(user_create))
         .route("/u/:user_id", get(user_find))
         .route("/u/:user_id/t", post(thread_create))
+        .route("/u/:user_id/t/:thread_id/trcs", get(thread_reconcile_cs))
         .route("/u/:user_id/t/:thread_id", get(thread_find))
         .route("/u/:user_id/t/:thread_id", post(thread_add_entry.layer(DefaultBodyLimit::max(1024 * 1024 * 10))))
         .route("/u/:user_id/t/:thread_id/:page", get(thread_get_entries))

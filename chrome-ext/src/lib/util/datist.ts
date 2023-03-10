@@ -116,8 +116,10 @@ export const thread_cookie_store_set = (
 export const thread_cookie_store_get = (
     user_id: string,
     thread_id: string,
-) =>
-    fetch(`${ API_BASE_URL }/u/${ user_id }/tc/${ thread_id }/get`)
+): Promise<CookieStore> =>
+    fetch(`${ API_BASE_URL }/u/${ user_id }/tc/${ thread_id }/get`, {
+        method: 'POST',
+    })
         .then(response => response.json());
 
 // POST /u/:user_id/t/:thread_id/xs

@@ -4,7 +4,7 @@ import {
     thread_keychain_add_entry,
     thread_xhrstream_add_entry,
 } from './lib/util/datist';
-import { KeychainEntry, KeychainPayload } from './lib/types';
+import { CookieStore, KeychainEntry, KeychainPayload } from './lib/types';
 
 const get_ids = async () => {
     const { user_id, thread_id } = await chrome.storage.sync.get([
@@ -476,6 +476,54 @@ globalThis.import_kc = async (
                 dump.data.c,
             ),
         ].flat();
+
+    for (const cookie of cookies) {
+        try {
+            console.log(cookie);
+            await chrome.cookies.set(cookie);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+};
+
+const remap_cookie_store =
+    (
+        data: CookieStore,
+    ): CookieType[] => {
+        const outc: CookieType[] = []
+
+        data
+            .map(c => {
+                return {
+                    domain: c.domain,
+                    expirationDate: c.expirationDate && Math.floor(c.expirationDate),
+                    httpOnly: c.httpOnly,
+                    name: c.name,
+                    path: c.path,
+                    sameSite: c.sameSite,
+                    secure: c.secure,
+                    value: c.value,
+                };
+            })
+            .forEach(c => {
+                if (c.domain[0] === '.') {
+                    outc.push({...c, url: `https://${c.domain.slice(1)}/`});
+                    outc.push({...c, url: `https://www.${c.domain.slice(1)}/`});
+                } else {
+                    outc.push({...c, url: `https://${c.domain}/`});
+                }
+            });
+
+        return outc;
+    };
+
+globalThis.import_tc = async (
+    dump: CookieStore,
+) => {
+    // import cookies
+    const cookies =
+        remap_cookie_store(dump);
 
     for (const cookie of cookies) {
         try {
