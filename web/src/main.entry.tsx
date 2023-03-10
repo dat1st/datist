@@ -80,3 +80,14 @@ class Datist {
 }
 
 Datist.ignite();
+
+window.addEventListener('message', (event) => {
+    if (event.data.type === 'xlrd_datist_init_pong') {
+        // @ts-ignore
+        window.__xlrd_datist_init = true;
+    }
+});
+
+window.postMessage({
+    type: 'xlrd_datist_init_ping',
+});

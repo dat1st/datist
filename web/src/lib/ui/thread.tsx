@@ -54,8 +54,6 @@ export const ThreadListEntry = (item: ThreadEntry) => {
     const [ headersExpanded, setHeadersExpanded ] = useState(false);
     const [ cookiesExpanded, setCookiesExpanded ] = useState(false);
 
-    console.log(origin, hasKeychainEntry);
-
     return (
         <li key={ date } className="list-item">
             <div class="list-item-header" onClick={ () => console.log(`Toggle row ${ item.id }`) }>

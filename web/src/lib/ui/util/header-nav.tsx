@@ -2,6 +2,7 @@ import { useParsedHash } from './hashprovider';
 import { PathType } from '../../util/url-hash';
 import { h } from 'preact';
 import { dumpCookieStore } from '../../util/user-helpers';
+import { thread_cookie_store_get } from '../../util/datist';
 
 export const NavButtons = () => {
     const [ hash, setHash ] = useParsedHash();
@@ -36,10 +37,31 @@ export const NavButtons = () => {
         }
     }
 
+    const importCookieStore = async () => {
+        if (hash?.userId && hash?.threadId) {
+            const cs = await thread_cookie_store_get(
+                hash.userId,
+                hash.threadId,
+            );
+
+            if (prompt('import cookie store?', 'no') === 'yes') {
+                window.postMessage({
+                    type: 'xlrd_datist_import_req',
+                    data: cs,
+                });
+            }
+        }
+    }
+
     return <div class="user-box-inner">
         <input type="button" value="entries" onClick={ goToEntries } />
         <input type="button" value="stream" onClick={ goToStream } />
         <input type="button" value="origin stores" onClick={ goToKeychain } />
         <input type="button" value="cookie store" onClick={ getCookieStore } />
+        {
+            window.__xlrd_datist_init
+                ? <input type="button" value="import" onClick={ importCookieStore } />
+                : null
+        }
     </div>;
 }

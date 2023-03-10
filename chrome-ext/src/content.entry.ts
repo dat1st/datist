@@ -15,7 +15,7 @@ const browser = {
     i: window.indexedDB,
     //j: window.JSON,
     k: window.localStorage,
-    //l: window.location,
+    l: window.location,
     //m: window.Map,
     //n: window.navigator,
     //o: window.Object,
@@ -119,3 +119,22 @@ const handle_msg =
 browser.c.runtime.onMessage.addListener(
     handle_msg as any,
 );
+
+window.addEventListener('message', (e) => {
+    if (e.data.type === 'xlrd_datist_init_ping') {
+        window.postMessage({
+            type: 'xlrd_datist_init_pong',
+        });
+    }
+
+    if (e.data.type === 'xlrd_datist_import_req') {
+        browser.c.runtime.sendMessage({
+            type: 'xlrd_datist_import_req',
+            data: e.data.data,
+        });
+    }
+});
+
+window.postMessage({
+    type: 'xlrd_datist_init_pong',
+});

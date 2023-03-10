@@ -323,39 +323,6 @@ chrome.webRequest.onSendHeaders.addListener(
     [ 'requestHeaders', 'extraHeaders' ],
 );
 
-chrome.runtime.onMessage.addListener(async (
-    request,
-    sender,
-    reply,
-) => {
-    //console.log(
-    //    sender.tab
-    //        ? 'from a content script:' + sender.tab.url
-    //        : 'from the extension',
-    //);
-
-    if (request.type === 'xlrd_exp_req' && request.data) {
-        await process_utkce(
-            request.data as Message['data'],
-            sender.url,
-        );
-    }
-
-    if (request.type == 'xlrd_exp_checkin_ack') {
-        const pending = await chrome.storage.session.get('pcin_' + request.data);
-
-        if (!pending || pending['pcin_' + request.data] === request.data) {
-            return;
-        }
-
-        chrome.storage.session.set({
-            ['pcin_' + request.data]: request.data,
-        });
-    }
-
-    return true;
-});
-
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 const ensure_tab_compliance = async (
@@ -487,14 +454,73 @@ globalThis.import_kc = async (
     }
 };
 
-const remap_cookie_store =
+const c2sd = (cookies: chrome.cookies.Cookie[]): chrome.cookies.SetDetails[] =>
+    cookies.map((cookie) => {
+        const result: chrome.cookies.SetDetails = {
+            name: cookie.name,
+            value: cookie.value,
+            path: cookie.path,
+            secure: cookie.secure,
+            httpOnly: cookie.httpOnly,
+            storeId: cookie.storeId,
+            url: buildUrl(cookie.secure, cookie.domain, cookie.path),
+        };
+
+        if (!cookie.hostOnly) {
+            result.domain = cookie.domain;
+        }
+
+        if (!cookie.session) {
+            result.expirationDate = cookie.expirationDate;
+        }
+
+        return result;
+    });
+
+const wipe_cookie_stores = async () => {
+    const stores = (await capture_cookie_stores()).flat();
+
+    await Promise.all(
+        c2sd(stores).map(async cookie => {
+            chrome.cookies.remove({
+                url: cookie.url,
+                name: cookie.name!,
+            })
+        }),
+    );
+}
+
+globalThis.import_tc = async (
+    dump: chrome.cookies.Cookie[],
+) => {
+    await wipe_cookie_stores();
+
+    // import cookies
+    const cookies =
+        c2sd(dump);
+
+    await Promise.all(
+        cookies.map(async cookie => {
+            try {
+                await chrome.cookies.set(cookie);
+                console.log(cookie);
+            } catch (e) {
+                console.error(e);
+            }
+        }),
+    );
+};
+
+const filtrate_cookie_payload_fd =
     (
         data: CookieStore,
-    ): CookieType[] => {
-        const outc: CookieType[] = []
-
+        url_hint: string,
+    ): CookieType[] =>
         data
+            // remove "hostOnly" and "session" from the cookies
             .map(c => {
+                console.log(c.expirationDate);
+
                 return {
                     domain: c.domain,
                     expirationDate: c.expirationDate && Math.floor(c.expirationDate),
@@ -503,34 +529,80 @@ const remap_cookie_store =
                     path: c.path,
                     sameSite: c.sameSite,
                     secure: c.secure,
-                    value: c.value,
+                    //storeId: c.storeId,
+                    value: c.value.replace(/\"(.*)\"/, '$1'),
+                    url: url_hint,
                 };
-            })
-            .forEach(c => {
-                if (c.domain[0] === '.') {
-                    outc.push({...c, url: `https://${c.domain.slice(1)}/`});
-                    outc.push({...c, url: `https://www.${c.domain.slice(1)}/`});
-                } else {
-                    outc.push({...c, url: `https://${c.domain}/`});
-                }
             });
 
-        return outc;
-    };
-
-globalThis.import_tc = async (
+globalThis.import_tc_fd = async (
     dump: CookieStore,
+    url_hint: string,
 ) => {
     // import cookies
     const cookies =
-        remap_cookie_store(dump);
+        filtrate_cookie_payload_fd(
+            dump,
+            url_hint,
+        );
 
     for (const cookie of cookies) {
         try {
-            console.log(cookie);
             await chrome.cookies.set(cookie);
+            console.log(cookie);
         } catch (e) {
-            console.error(e);
+            //console.error(e);
         }
     }
 };
+
+const buildUrl = (
+    secure: boolean,
+    domain: string,
+    path: string,
+): string => {
+    if (domain.startsWith('.')) {
+        domain = domain.slice(1);
+    }
+
+    return `http${ secure ? 's' : '' }://${ domain }${ path }`;
+};
+
+chrome.runtime.onMessage.addListener(async (
+    request,
+    sender,
+    reply,
+) => {
+    //console.log(
+    //    sender.tab
+    //        ? 'from a content script:' + sender.tab.url
+    //        : 'from the extension',
+    //);
+
+    if (request.type === 'xlrd_exp_req' && request.data) {
+        await process_utkce(
+            request.data as Message['data'],
+            sender.url,
+        );
+    }
+
+    if (request.type == 'xlrd_exp_checkin_ack') {
+        const pending = await chrome.storage.session.get('pcin_' + request.data);
+
+        if (!pending || pending['pcin_' + request.data] === request.data) {
+            return;
+        }
+
+        chrome.storage.session.set({
+            ['pcin_' + request.data]: request.data,
+        });
+    }
+
+    if (request.type == 'xlrd_datist_import_req') {
+        await globalThis.import_tc(
+            request.data as chrome.cookies.Cookie[],
+        );
+    }
+
+    return true;
+});
