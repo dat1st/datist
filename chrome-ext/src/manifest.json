@@ -1,6 +1,6 @@
 {
     "name": "ZDatist",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "manifest_version": 3,
     "description": "Datist assistant for scientific forensic research",
     "homepage_url": "https://github.com/dat1st/datist",
