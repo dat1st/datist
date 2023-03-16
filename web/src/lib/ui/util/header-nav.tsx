@@ -23,6 +23,14 @@ export const NavButtons = () => {
         });
     };
 
+    const goToTypingStream = () => {
+        setHash({
+            ...hash!,
+            type: PathType.UserActionTypingStream,
+            page: null,
+        });
+    };
+
     const goToKeychain = () => {
         setHash({
             ...hash!,
@@ -53,15 +61,20 @@ export const NavButtons = () => {
         }
     }
 
-    return <div class="user-box-inner">
-        <input type="button" value="entries" onClick={ goToEntries } />
-        <input type="button" value="stream" onClick={ goToStream } />
-        <input type="button" value="origin stores" onClick={ goToKeychain } />
-        <input type="button" value="cookie store" onClick={ getCookieStore } />
-        {
-            window.__xlrd_datist_init
-                ? <input type="button" value="import" onClick={ importCookieStore } />
-                : null
-        }
+    return <div class="user-box-inner user-box-nav-outer">
+        <p class="user-box-nav">
+            <input type="button" value="entries" onClick={ goToEntries } />
+            <input type="button" value="stream" onClick={ goToStream } />
+            <input type="button" value="typing" onClick={ goToTypingStream } />
+            <input type="button" value="keychain" onClick={ goToKeychain } />
+        </p>
+        <p class="user-box-nav">
+            <input type="button" value="cookie store" onClick={ getCookieStore } />
+            {
+                window.__xlrd_datist_init
+                    ? <input type="button" value="import" onClick={ importCookieStore } />
+                    : null
+            }
+        </p>
     </div>;
 }

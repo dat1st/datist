@@ -18,7 +18,7 @@ use simd_json::json;
 use tower_http::services::ServeDir;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::endpoints::thread::{thread_add_entry, thread_cookie_store_get, thread_cookie_store_set, thread_create, thread_find, thread_get_entries, thread_keychain_add_entry, thread_keychain_add_url_filter, thread_keychain_get_entry, thread_keychain_has_entry, thread_keychain_list_entries, thread_reconcile_cs, thread_xhrstream_add_entry, thread_xhrstream_list_entries};
+use crate::endpoints::thread::{thread_action_typing_add_entry, thread_action_typing_list_entries, thread_add_entry, thread_cookie_store_get, thread_cookie_store_set, thread_create, thread_find, thread_get_entries, thread_keychain_add_entry, thread_keychain_add_url_filter, thread_keychain_get_entry, thread_keychain_has_entry, thread_keychain_list_entries, thread_reconcile_cs, thread_xhrstream_add_entry, thread_xhrstream_list_entries};
 use crate::endpoints::user::{user_create, user_find};
 use crate::types::{DatistRepoError, DynDatistRepo, ThreadRepo};
 
@@ -82,6 +82,8 @@ async fn main() {
         .route("/u/:user_id/tc/:thread_id/get", post(thread_cookie_store_get))
         .route("/u/:user_id/tx/:thread_id", post(thread_xhrstream_add_entry.layer(DefaultBodyLimit::max(1024 * 1024 * 50))))
         .route("/u/:user_id/tx/:thread_id/:page", get(thread_xhrstream_list_entries))
+        .route("/u/:user_id/at/:thread_id", post(thread_action_typing_add_entry.layer(DefaultBodyLimit::max(1024 * 1024 * 50))))
+        .route("/u/:user_id/at/:thread_id/:page", get(thread_action_typing_list_entries))
         .nest_service("/assets", serve_dir.clone())
         .fallback_service(serve_dir)
         .with_state((handlebars, user_repo));

@@ -205,7 +205,18 @@ main .onboard-box {
     gap: 1em;
 }
 
-.user-box-inner > div {
+.user-box-inner.user-box-nav-outer {
+    flex-flow: column;
+    gap: 0;
+}
+
+.user-box-inner > p.user-box-nav {
+    flex-flow: row wrap;
+    display: flex;
+    margin: 5px 0;
+}
+
+.user-box-inner > div, .user-box-inner > p.user-box-nav > div {
     flex: 1;
     column-gap: 1em;
     row-gap: 1em;

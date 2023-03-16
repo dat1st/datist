@@ -6,6 +6,7 @@ import { PathType } from '../util/url-hash';
 import { ThreadBox } from './thread';
 import { ThreadKeychainBox } from './thread-kc';
 import { ThreadStreamBox } from './thread-xs';
+import { ThreadTypingStreamBox } from './thread-at';
 
 export const MainUIInner = () => {
     const [ hash, _ ] = useParsedHash();
@@ -31,6 +32,12 @@ export const MainUIInner = () => {
     if (hash?.type === PathType.UserThreadStream) {
         return <main>
             <ThreadStreamBox />
+        </main>;
+    }
+
+    if (hash?.type === PathType.UserActionTypingStream) {
+        return <main>
+            <ThreadTypingStreamBox />
         </main>;
     }
 

@@ -72,3 +72,13 @@ export interface ThreadXhrStreamPayload {
     raw?: string[];
     formData?: string;
 }
+
+export interface ThreadActionTypingEntry {
+    url: string;
+    data: ThreadActionTypingPayload;
+    created_utc?: number;
+}
+
+export interface ThreadActionTypingPayload {
+    text: string;
+}

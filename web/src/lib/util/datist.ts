@@ -3,6 +3,7 @@ import {
     KeychainEntry,
     KeychainPayload,
     Thread,
+    ThreadActionTypingEntry,
     ThreadEntry,
     ThreadPayload,
     ThreadXhrStreamEntry,
@@ -149,7 +150,7 @@ export const thread_cookie_store_get = (
     })
         .then(response => response.json());
 
-// POST /u/:user_id/t/:thread_id/xs
+// POST /u/:user_id/tx/:thread_id/xs
 export const thread_xhrstream_add_entry = (
     user_id: string,
     thread_id: string,
@@ -162,11 +163,33 @@ export const thread_xhrstream_add_entry = (
     })
         .then(response => response.json());
 
-// GET /u/:user_id/t/:thread_id/xs/:page
+// GET /u/:user_id/tx/:thread_id/xs/:page
 export const thread_xhrstream_get_entries = (
     user_id: string,
     thread_id: string,
     page: number,
 ): Promise<ThreadXhrStreamEntry[]> =>
     fetch(`${ API_BASE_URL }/u/${ user_id }/tx/${ thread_id }/${ page }`)
+        .then(response => response.json());
+
+// POST /u/:user_id/at/:thread_id/xs
+export const thread_action_typing_add_entry = (
+    user_id: string,
+    thread_id: string,
+    data: ThreadActionTypingEntry,
+) =>
+    fetch(`${ API_BASE_URL }/u/${ user_id }/at/${ thread_id }`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' },
+    })
+        .then(response => response.json());
+
+// GET /u/:user_id/at/:thread_id/xs/:page
+export const thread_action_typing_list_entries = (
+    user_id: string,
+    thread_id: string,
+    page: number,
+): Promise<ThreadActionTypingEntry[]> =>
+    fetch(`${ API_BASE_URL }/u/${ user_id }/at/${ thread_id }/${ page }`)
         .then(response => response.json());

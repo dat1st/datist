@@ -3,6 +3,7 @@ export enum PathType {
     UserThread,
     UserThreadKeychain,
     UserThreadStream,
+    UserActionTypingStream,
     Unknown,
 }
 
@@ -21,6 +22,11 @@ export type Path = {
     page: number | null;
 } | {
     type: PathType.UserThreadStream;
+    userId: string;
+    threadId: string;
+    page: number | null;
+} | {
+    type: PathType.UserActionTypingStream;
     userId: string;
     threadId: string;
     page: number | null;
@@ -59,6 +65,13 @@ export const urlHash = (path: string): Path | null => {
                 threadId: segments[3],
                 page,
             };
+        case PathType.UserActionTypingStream:
+            return {
+                type: PathType.UserActionTypingStream,
+                userId: segments[1],
+                threadId: segments[3],
+                page,
+            };
     }
 
     return null;
@@ -82,10 +95,8 @@ const getPage = (
                 return parseInt(segments[4], 10);
             }
         case PathType.UserThreadKeychain:
-            if (segments.length === 6) {
-                return parseInt(segments[5], 10);
-            }
         case PathType.UserThreadStream:
+        case PathType.UserActionTypingStream:
             if (segments.length === 6) {
                 return parseInt(segments[5], 10);
             }
@@ -133,6 +144,17 @@ const getType = (segments: string[]): PathType => {
         ) {
             return PathType.UserThreadStream;
         }
+
+        if (
+            segments[2] === 'thread'
+            && segments[4] === 'typing'
+            && (
+                !segments[5]
+                || isIntStr(segments[5])
+            )
+        ) {
+            return PathType.UserActionTypingStream;
+        }
     }
 
     return PathType.Unknown;
@@ -149,6 +171,8 @@ export const serializeUrlHash = (path: Path): string => {
             return `user/${ path.userId }/thread/${ path.threadId }/keychain${ path.page ? `/${ path.page }` : '' }`;
         case PathType.UserThreadStream:
             return `user/${ path.userId }/thread/${ path.threadId }/stream${ path.page ? `/${ path.page }` : '' }`;
+        case PathType.UserActionTypingStream:
+            return `user/${ path.userId }/thread/${ path.threadId }/typing${ path.page ? `/${ path.page }` : '' }`;
         case PathType.Unknown:
             return '';
     }

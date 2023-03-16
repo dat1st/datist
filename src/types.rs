@@ -17,6 +17,18 @@ pub struct ThreadEntry {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct ThreadActionTypingEntry {
+    pub url: String,
+    pub data: ThreadActionTypingPayload,
+    pub created_utc: Option<u128>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ThreadActionTypingPayload {
+    pub text: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ThreadXhrStreamEntry {
     pub url: String,
     pub data: ThreadXhrStreamPayload,

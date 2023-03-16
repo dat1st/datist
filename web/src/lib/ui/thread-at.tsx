@@ -1,8 +1,8 @@
 import { useParsedHash } from './util/hashprovider';
 import { h } from 'preact';
-import { thread_xhrstream_get_entries } from '../util/datist';
+import { thread_action_typing_list_entries, thread_xhrstream_get_entries } from '../util/datist';
 import { useEffect, useState } from 'preact/hooks';
-import { ThreadXhrStreamEntry } from '../types';
+import { ThreadActionTypingEntry, ThreadXhrStreamEntry } from '../types';
 import { NavButtons } from './util/header-nav';
 
 const parseEntry = (item: any) => {
@@ -35,16 +35,7 @@ const processEntry = (entry: ThreadXhrStreamEntry) => {
     return null;
 };
 
-export const ThreadXhrStreamItem = (item: ThreadXhrStreamEntry) => {
-    const [ hash, _ ] = useParsedHash();
-
-    const [ payloadExpanded, setPayloadExpanded ] = useState(false);
-
-    const rtype = item.data.raw ? 'raw' : 'formData';
-    const pitem = processEntry(item);
-
-    const size = JSON.stringify(pitem).length;
-
+export const ThreadTypingStreamItem = (item: ThreadActionTypingEntry) => {
     const date = new Date(item.created_utc! / 1000);
 
     return (
@@ -52,7 +43,6 @@ export const ThreadXhrStreamItem = (item: ThreadXhrStreamEntry) => {
             <div class="list-item-header" onClick={ () => console.log(`Toggle row ${ item.id }`) }>
                 <div class="list-item-header-label overflow-dots">
                     <a href={ item.url } alt={ item.url } target="_blank">{ item.url }</a>
-                    <br />{ rtype } - { size }
                 </div>
                 <div class="list-item-header-right-wrap">
                     <div class="list-item-info-label">
@@ -63,18 +53,8 @@ export const ThreadXhrStreamItem = (item: ThreadXhrStreamEntry) => {
             <div class="list-item-body">
                 <ul class="list">
                     <li className="list-item">
-                        <div className="list-item-header">
-                            <div className="list-item-header-label"
-                                 onClick={ () => setPayloadExpanded(!payloadExpanded) }>
-                                Payload ⬇
-                            </div>
-                        </div>
-                        <div className="list-item-body"
-                             style={ !payloadExpanded ? { display: 'none' } : {} }
-                        >
-                            <pre>
-                                { JSON.stringify(pitem, null, 4) }
-                            </pre>
+                        <div className="list-item-body">
+                            { item.data.text }
                         </div>
                     </li>
                 </ul>
@@ -83,7 +63,7 @@ export const ThreadXhrStreamItem = (item: ThreadXhrStreamEntry) => {
     );
 };
 
-export const ThreadStreamBox = () => {
+export const ThreadTypingStreamBox = () => {
     const [ hash, setHash ] = useParsedHash();
 
     const page = hash?.page ?? 0;
@@ -106,11 +86,11 @@ export const ThreadStreamBox = () => {
         });
     };
 
-    const [ entries, setEntries ] = useState<ThreadXhrStreamEntry[]>([]);
+    const [ entries, setEntries ] = useState<ThreadActionTypingEntry[]>([]);
 
     useEffect(() => {
         const fetchEntries = async () => {
-            const entries = await thread_xhrstream_get_entries(
+            const entries = await thread_action_typing_list_entries(
                 hash?.userId!,
                 hash?.threadId!,
                 page,
@@ -143,7 +123,7 @@ export const ThreadStreamBox = () => {
                         //    <ThreadEntry { ...item } />
                         //))
 
-                        entries.map(item => <ThreadXhrStreamItem { ...item } />)
+                        entries.map(item => <ThreadTypingStreamItem { ...item } />)
                     }
                 </ul>
             </div>

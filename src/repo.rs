@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use uuid::Uuid;
 
-use crate::types::{CookieStore, DatistRepoError, KeychainEntry, KeychainListEntry, Thread, ThreadEntry, ThreadRepo, ThreadXhrStreamEntry, User};
+use crate::types::{CookieStore, DatistRepoError, KeychainEntry, KeychainListEntry, Thread, ThreadActionTypingEntry, ThreadEntry, ThreadRepo, ThreadXhrStreamEntry, User};
 
 #[axum::async_trait]
 pub trait DatistRepo {
@@ -25,6 +25,9 @@ pub trait DatistRepo {
 
     async fn thread_xhrstream_add_entry(&self, user_id: Uuid, thread_id: Uuid, thread_entry: ThreadXhrStreamEntry) -> Result<(), DatistRepoError>;
     async fn thread_xhrstream_list_entries(&self, user_id: Uuid, thread_id: Uuid, page: u32) -> Result<Vec<ThreadXhrStreamEntry>, DatistRepoError>;
+
+    async fn thread_action_typing_add_entry(&self, user_id: Uuid, thread_id: Uuid, thread_entry: ThreadActionTypingEntry) -> Result<(), DatistRepoError>;
+    async fn thread_action_typing_list_entries(&self, user_id: Uuid, thread_id: Uuid, page: u32) -> Result<Vec<ThreadActionTypingEntry>, DatistRepoError>;
 }
 
 #[axum::async_trait]
@@ -415,6 +418,68 @@ impl DatistRepo for ThreadRepo {
 
             if i >= page * 50 && i < (page + 1) * 50 {
                 let entry: ThreadXhrStreamEntry = simd_json::from_slice(value.as_mut())
+                    .map_err(|_| DatistRepoError::SerializationError)?;
+
+                entries.push(entry);
+            }
+
+            i += 1;
+        }
+
+        Ok(entries)
+    }
+
+    async fn thread_action_typing_add_entry(&self, user_id: Uuid, thread_id: Uuid, thread_entry: ThreadActionTypingEntry) -> Result<(), DatistRepoError> {
+        self.thread_find(user_id, thread_id).await?;
+
+        let timestamp = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_micros();
+
+        let key = format!("user:{user_id}:threads:{thread_id}:at_stream:{timestamp}");
+
+        let thread_entry = ThreadActionTypingEntry {
+            created_utc: Some(timestamp),
+            ..thread_entry
+        };
+
+        let value = simd_json::to_string(&thread_entry)
+            .map_err(|_| DatistRepoError::SerializationError)?;
+
+        self.db.put(key, value)
+            .map_err(|_| DatistRepoError::DbError)?;
+
+        Ok(())
+    }
+
+    async fn thread_action_typing_list_entries(&self, user_id: Uuid, thread_id: Uuid, page: u32) -> Result<Vec<ThreadActionTypingEntry>, DatistRepoError> {
+        self.thread_find(user_id, thread_id).await?;
+
+        // iterate over all keys in the keychain and in steps of 50, return items at page * 50
+        let mut entries = Vec::new();
+
+        let from = format!("user:{user_id}:threads:{thread_id}:at_stream:");
+        let to = format!("user:{user_id}:threads:{thread_id}:at_stream:{}", u64::MAX);
+
+        let iter =
+            self.db.iterator(
+                rocksdb::IteratorMode::From(
+                    to.as_bytes(),
+                    rocksdb::Direction::Reverse,
+                ),
+            )
+                .filter_map(|v| v.ok());
+
+        let mut i = 0;
+
+        for (key, mut value) in iter {
+            if key.as_ref() < from.as_bytes() {
+                break;
+            }
+
+            if i >= page * 50 && i < (page + 1) * 50 {
+                let entry: ThreadActionTypingEntry = simd_json::from_slice(value.as_mut())
                     .map_err(|_| DatistRepoError::SerializationError)?;
 
                 entries.push(entry);

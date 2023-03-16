@@ -3,7 +3,6 @@ import { h } from 'preact';
 import { thread_keychain_get_entries, thread_keychain_has_entry } from '../util/datist';
 import { useEffect, useState } from 'preact/hooks';
 import { KeychainEntry } from '../types';
-import { PathType } from '../util/url-hash';
 import { dumpKeychainEntry } from '../util/user-helpers';
 import { NavButtons } from './util/header-nav';
 

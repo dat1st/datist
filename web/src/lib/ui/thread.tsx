@@ -3,11 +3,8 @@ import { h } from 'preact';
 import { thread_get_entries, thread_keychain_has_entry } from '../util/datist';
 import { useEffect, useState } from 'preact/hooks';
 import { ThreadEntry } from '../types';
-import { PathType } from '../util/url-hash';
 import { dumpKeychainEntry } from '../util/user-helpers';
 import { NavButtons } from './util/header-nav';
-
-const ITEMS_PER_PAGE = 3;
 
 export const ThreadListEntry = (item: ThreadEntry) => {
     const origin = new URL(item.url).origin;
