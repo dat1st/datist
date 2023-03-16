@@ -66,6 +66,6 @@ export const compile: Transform = subset(
     wirePluginEsbuild({
         filter: '**/*.{ts,css}',
         minify: true,
-        sourceMap: true,
+        sourceMap: false,
     }),
 )

@@ -2,15 +2,15 @@ import {
     CookieStore,
     KeychainEntry,
     KeychainPayload,
-    Thread, ThreadActionTypingEntry,
+    Thread, ThreadActionInteractionEntry, ThreadActionTypingEntry,
     ThreadEntry,
     ThreadPayload,
     ThreadXhrStreamEntry,
     User,
 } from '../types';
 
-//const API_BASE_URL = 'https://dat.ist';
-const API_BASE_URL = 'http://127.0.0.1:3000';
+const API_BASE_URL = 'https://dat.ist';
+//const API_BASE_URL = 'http://127.0.0.1:3000';
 
 // POST /user
 export const user_create = (): Promise<User> =>
@@ -158,11 +158,33 @@ export const thread_action_typing_add_entry = (
     })
         .then(response => response.json());
 
-// GET /u/:user_id/at/:thread_id/xs/:page
+// GET /u/:user_id/at/:thread_id/:page
 export const thread_action_typing_list_entries = (
     user_id: string,
     thread_id: string,
     page: number,
 ): Promise<ThreadActionTypingEntry[]> =>
     fetch(`${ API_BASE_URL }/u/${ user_id }/at/${ thread_id }/${ page }`)
+        .then(response => response.json());
+
+// POST /u/:user_id/ct/:thread_id
+export const thread_action_interaction_add_entry = (
+    user_id: string,
+    thread_id: string,
+    data: ThreadActionInteractionEntry,
+) =>
+    fetch(`${ API_BASE_URL }/u/${ user_id }/ct/${ thread_id }`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' },
+    })
+        .then(response => response.json());
+
+// GET /u/:user_id/ct/:thread_id/:page
+export const thread_action_interaction_list_entries = (
+    user_id: string,
+    thread_id: string,
+    page: number,
+): Promise<ThreadActionInteractionEntry[]> =>
+    fetch(`${ API_BASE_URL }/u/${ user_id }/ct/${ thread_id }/${ page }`)
         .then(response => response.json());

@@ -7,6 +7,7 @@ import { ThreadBox } from './thread';
 import { ThreadKeychainBox } from './thread-kc';
 import { ThreadStreamBox } from './thread-xs';
 import { ThreadTypingStreamBox } from './thread-at';
+import { ThreadInteractionStreamBox } from './thread-ct';
 
 export const MainUIInner = () => {
     const [ hash, _ ] = useParsedHash();
@@ -38,6 +39,12 @@ export const MainUIInner = () => {
     if (hash?.type === PathType.UserActionTypingStream) {
         return <main>
             <ThreadTypingStreamBox />
+        </main>;
+    }
+
+    if (hash?.type === PathType.UserActionInteractionStream) {
+        return <main>
+            <ThreadInteractionStreamBox />
         </main>;
     }
 

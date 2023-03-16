@@ -31,6 +31,14 @@ export const NavButtons = () => {
         });
     };
 
+    const goToInteractionStream = () => {
+        setHash({
+            ...hash!,
+            type: PathType.UserActionInteractionStream,
+            page: null,
+        });
+    };
+
     const goToKeychain = () => {
         setHash({
             ...hash!,
@@ -66,6 +74,7 @@ export const NavButtons = () => {
             <input type="button" value="entries" onClick={ goToEntries } />
             <input type="button" value="stream" onClick={ goToStream } />
             <input type="button" value="typing" onClick={ goToTypingStream } />
+            <input type="button" value="interaction" onClick={ goToInteractionStream } />
             <input type="button" value="keychain" onClick={ goToKeychain } />
         </p>
         <p class="user-box-nav">

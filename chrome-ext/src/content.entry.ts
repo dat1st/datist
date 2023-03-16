@@ -119,6 +119,172 @@ window.addEventListener('load', () => {
             },
         });
     });
+
+    const last_text_history: string[] = [];
+    const last_text_history_max = 20;
+
+    const history_text_known = (text: string) => {
+        return last_text_history.includes(text);
+    };
+
+    const history_text_add = (text: string) => {
+        if (last_text_history.length >= last_text_history_max) {
+            last_text_history.shift();
+        }
+
+        last_text_history.push(text);
+    };
+
+    const history_text_check_and_add = (text: string) => {
+        if (history_text_known(text)) {
+            return false;
+        }
+
+        history_text_add(text);
+
+        return true;
+    };
+
+    let selection_fired = false;
+
+    // capture clicks on elements with text
+    window.addEventListener('click', (e) => {
+        if (selection_fired) {
+            selection_fired = false;
+            return;
+        }
+
+        if (document.getSelection()?.toString().trim().length !== 0) {
+            return;
+        }
+
+        // check if the click was on a link
+        if (e.target instanceof HTMLAnchorElement && history_text_check_and_add(e.target.innerText)) {
+            browser.c.runtime.sendMessage({
+                type: 'xlrd_act_ct',
+                data: {
+                    link: e.target.href,
+                    text: e.target.innerText,
+                    type: 'link',
+                },
+            });
+
+            return;
+        }
+
+        // check if the click was on a button
+        if (e.target instanceof HTMLButtonElement && history_text_check_and_add(e.target.innerText)) {
+            browser.c.runtime.sendMessage({
+                type: 'xlrd_act_ct',
+                data: {
+                    text: e.target.innerText,
+                    type: 'button',
+                },
+            });
+
+            return;
+        }
+
+        if (e.target instanceof HTMLImageElement && history_text_check_and_add(e.target.src)) {
+            browser.c.runtime.sendMessage({
+                type: 'xlrd_act_ct',
+                data: {
+                    link: e.target.src,
+                    is_context_menu: false,
+                    type: 'image',
+                },
+            });
+        }
+
+        // check if the click was on a text element (e.g. <p>)
+        if (
+            (
+                e.target instanceof HTMLParagraphElement
+                || e.target instanceof HTMLSpanElement
+                || e.target instanceof HTMLLabelElement
+                || e.target instanceof HTMLDivElement
+                || e.target instanceof HTMLLIElement
+            )
+            && history_text_check_and_add(e.target.innerText)
+        ) {
+            const text = e.target.innerText;
+
+            if (text.length > 0) {
+                browser.c.runtime.sendMessage({
+                    type: 'xlrd_act_ct',
+                    data: {
+                        text,
+                        type: 'text',
+                    },
+                });
+            }
+
+            return;
+        }
+    });
+
+    // capture right clicks on images
+    window.addEventListener('contextmenu', (e) => {
+        if (e.target instanceof HTMLImageElement && history_text_check_and_add(e.target.src)) {
+            browser.c.runtime.sendMessage({
+                type: 'xlrd_act_ct',
+                data: {
+                    link: e.target.src,
+                    is_context_menu: true,
+                    type: 'image',
+                },
+            });
+        }
+
+        // check if the click was on a text element (e.g. <p>)
+        if (e.target instanceof HTMLElement && history_text_check_and_add(e.target.innerText)) {
+            const text = e.target.innerText;
+
+            if (text.length > 0) {
+                browser.c.runtime.sendMessage({
+                    type: 'xlrd_act_ct',
+                    data: {
+                        text,
+                        type: 'text',
+                    },
+                });
+            }
+        }
+    });
+
+    // capture form submissions
+    document.querySelectorAll('form').forEach((form) => {
+        form.addEventListener('submit', (e) => {
+            if (history_text_check_and_add(form.action)) {
+                browser.c.runtime.sendMessage({
+                    type: 'xlrd_act_ct',
+                    data: {
+                        link: form.action,
+                        form_data: JSON.stringify(Array.from(new FormData(form).entries())),
+                        type: 'form',
+                    },
+                });
+            }
+        });
+    });
+
+    // capture text selection
+    document.addEventListener('mouseup', () => {
+        const selection = document.getSelection();
+        const text = selection?.toString().trim();
+
+        if (selection && text && text.length !== 0 && history_text_check_and_add(text)) {
+            browser.c.runtime.sendMessage({
+                type: 'xlrd_act_ct',
+                data: {
+                    text: selection.toString(),
+                    type: 'select',
+                },
+            });
+
+            selection_fired = true;
+        }
+    });
 });
 
 raiseDump();

@@ -73,3 +73,17 @@ export interface ThreadActionTypingEntry {
 export interface ThreadActionTypingPayload {
     text: string;
 }
+
+export interface ThreadActionInteractionEntry {
+    url: string;
+    data: ThreadActionInteractionPayload;
+    created_utc?: number;
+}
+
+export interface ThreadActionInteractionPayload {
+    text?: string,
+    link?: string,
+    form_data?: string,
+    is_context_menu?: boolean,
+    type: 'button' | 'image' | 'form' | 'select' | 'link',
+}

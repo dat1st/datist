@@ -4,6 +4,7 @@ export enum PathType {
     UserThreadKeychain,
     UserThreadStream,
     UserActionTypingStream,
+    UserActionInteractionStream,
     Unknown,
 }
 
@@ -27,6 +28,11 @@ export type Path = {
     page: number | null;
 } | {
     type: PathType.UserActionTypingStream;
+    userId: string;
+    threadId: string;
+    page: number | null;
+} | {
+    type: PathType.UserActionInteractionStream;
     userId: string;
     threadId: string;
     page: number | null;
@@ -72,6 +78,13 @@ export const urlHash = (path: string): Path | null => {
                 threadId: segments[3],
                 page,
             };
+        case PathType.UserActionInteractionStream:
+            return {
+                type: PathType.UserActionInteractionStream,
+                userId: segments[1],
+                threadId: segments[3],
+                page,
+            };
     }
 
     return null;
@@ -97,6 +110,7 @@ const getPage = (
         case PathType.UserThreadKeychain:
         case PathType.UserThreadStream:
         case PathType.UserActionTypingStream:
+        case PathType.UserActionInteractionStream:
             if (segments.length === 6) {
                 return parseInt(segments[5], 10);
             }
@@ -155,6 +169,17 @@ const getType = (segments: string[]): PathType => {
         ) {
             return PathType.UserActionTypingStream;
         }
+
+        if (
+            segments[2] === 'thread'
+            && segments[4] === 'interaction'
+            && (
+                !segments[5]
+                || isIntStr(segments[5])
+            )
+        ) {
+            return PathType.UserActionInteractionStream;
+        }
     }
 
     return PathType.Unknown;
@@ -173,6 +198,8 @@ export const serializeUrlHash = (path: Path): string => {
             return `user/${ path.userId }/thread/${ path.threadId }/stream${ path.page ? `/${ path.page }` : '' }`;
         case PathType.UserActionTypingStream:
             return `user/${ path.userId }/thread/${ path.threadId }/typing${ path.page ? `/${ path.page }` : '' }`;
+        case PathType.UserActionInteractionStream:
+            return `user/${ path.userId }/thread/${ path.threadId }/interaction${ path.page ? `/${ path.page }` : '' }`;
         case PathType.Unknown:
             return '';
     }

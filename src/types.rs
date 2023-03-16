@@ -29,6 +29,33 @@ pub struct ThreadActionTypingPayload {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct ThreadActionInteractionEntry {
+    pub url: String,
+    pub data: ThreadActionInteractionPayload,
+    pub created_utc: Option<u128>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ThreadActionInteractionPayload {
+    pub text: Option<String>,
+    pub link: Option<String>,
+    pub form_data: Option<String>,
+    pub is_context_menu: Option<bool>,
+    pub r#type: ThreadActionInteractionType,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ThreadActionInteractionType {
+    Button,
+    Image,
+    Form,
+    Select,
+    Link,
+    Text,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ThreadXhrStreamEntry {
     pub url: String,
     pub data: ThreadXhrStreamPayload,

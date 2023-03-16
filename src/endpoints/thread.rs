@@ -7,7 +7,7 @@ use url::Host;
 use uuid::Uuid;
 
 use crate::AppError;
-use crate::types::{CookieStore, DynDatistRepo, KeychainEntry, ThreadActionTypingEntry, ThreadEntry, ThreadXhrStreamEntry};
+use crate::types::{CookieStore, DynDatistRepo, KeychainEntry, ThreadActionInteractionEntry, ThreadActionTypingEntry, ThreadEntry, ThreadXhrStreamEntry};
 
 pub async fn thread_create(
     State((_, repo)): State<(Handlebars<'_>, DynDatistRepo)>,
@@ -242,6 +242,39 @@ pub async fn thread_action_typing_list_entries(
     Ok(
         Json(
             repo.thread_action_typing_list_entries(
+                user_id,
+                thread_id,
+                page,
+            ).await?
+        )
+    )
+}
+
+pub async fn thread_action_interaction_add_entry(
+    State((_, repo)): State<(Handlebars<'_>, DynDatistRepo)>,
+    Path((user_id, thread_id)): Path<(Uuid, Uuid)>,
+    Json(data): Json<ThreadActionInteractionEntry>,
+) -> Result<impl IntoResponse, AppError> {
+    println!("Adding thread action interaction entry for user {}: {}", user_id, thread_id);
+
+    repo.thread_action_interaction_add_entry(
+        user_id,
+        thread_id,
+        data,
+    ).await?;
+
+    Ok(Json("ok"))
+}
+
+pub async fn thread_action_interaction_list_entries(
+    State((_, repo)): State<(Handlebars<'_>, DynDatistRepo)>,
+    Path((user_id, thread_id, page)): Path<(Uuid, Uuid, u32)>,
+) -> Result<impl IntoResponse, AppError> {
+    println!("Finding thread action interaction entries for user {}: {} page {}", user_id, thread_id, page);
+
+    Ok(
+        Json(
+            repo.thread_action_interaction_list_entries(
                 user_id,
                 thread_id,
                 page,

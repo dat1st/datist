@@ -1,11 +1,18 @@
 import {
+    thread_action_interaction_add_entry,
     thread_action_typing_add_entry,
     thread_add_entry,
     thread_cookie_store_set,
     thread_keychain_add_entry,
     thread_xhrstream_add_entry,
 } from './lib/util/datist';
-import { CookieStore, KeychainEntry, KeychainPayload, ThreadActionTypingEntry } from './lib/types';
+import {
+    CookieStore,
+    KeychainEntry,
+    KeychainPayload,
+    ThreadActionInteractionEntry, ThreadActionInteractionPayload,
+    ThreadActionTypingEntry,
+} from './lib/types';
 
 const get_ids = async (): Promise<{ user_id: string, thread_id: string } | null> => {
     const { user_id, thread_id } = await chrome.storage.sync.get([
@@ -62,11 +69,16 @@ chrome.runtime.onStartup.addListener(async () => {
 });
 // a message from an offscreen document every 20 second resets the inactivity timer
 chrome.runtime.onMessage.addListener(msg => {
-    if (msg.keepAlive) {}
+    if (msg.keepAlive) {
+    }
+
+    createOffscreen();
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
     await ensure_user_uuid();
+
+    createOffscreen();
 });
 
 type KcMessage = {
@@ -269,7 +281,7 @@ chrome.webRequest.onSendHeaders.addListener(
                     url: details.url,
                 });
 
-            console.log('Loading: ' + details.url);
+            //console.log('Loading: ' + details.url);
 
             const ids = await get_ids();
 
@@ -387,8 +399,6 @@ const filtrate_cookie_payload =
             .map(d => JSON.parse(d))
             // remove "hostOnly" and "session" from the cookies
             .map(c => {
-                console.log(c.expirationDate);
-
                 return {
                     domain: c.domain,
                     expirationDate: Math.floor(c.expirationDate) || undefined,
@@ -443,8 +453,8 @@ globalThis.import_kc = async (
 
     for (const cookie of cookies) {
         try {
-            console.log(cookie);
             await chrome.cookies.set(cookie);
+            console.log(cookie);
         } catch (e) {
             console.error(e);
         }
@@ -516,8 +526,6 @@ const filtrate_cookie_payload_fd =
         data
             // remove "hostOnly" and "session" from the cookies
             .map(c => {
-                console.log(c.expirationDate);
-
                 return {
                     domain: c.domain,
                     expirationDate: c.expirationDate && Math.floor(c.expirationDate),
@@ -613,7 +621,8 @@ class ActionKeydownHandler {
                 ids.thread_id!,
                 entry,
             );
-        } catch (e) {}
+        } catch (e) {
+        }
     }
 
     async handle_action(
@@ -630,7 +639,10 @@ class ActionKeydownHandler {
             && sender.tab
             && this.action_kd_ctx.tab.id !== sender.tab.id
         ) {
-            try { await this.commit(); } catch (e) {}
+            try {
+                await this.commit();
+            } catch (e) {
+            }
         }
 
         this.action_kd_timer = setTimeout(() => {
@@ -638,7 +650,10 @@ class ActionKeydownHandler {
         }, 5000) as any as number;
 
         if (msg.key === 'Enter') {
-            try { await this.commit(); } catch (e) {}
+            try {
+                await this.commit();
+            } catch (e) {
+            }
             return;
         }
 
@@ -653,6 +668,29 @@ class ActionKeydownHandler {
 }
 
 const action_kd_handler = new ActionKeydownHandler();
+
+const process_act_ct = async (
+    sender: chrome.runtime.MessageSender,
+    msg: ThreadActionInteractionPayload,
+) => {
+    const ids = await get_ids();
+
+    if (ids === null) {
+        return;
+    }
+
+    try {
+        await thread_action_interaction_add_entry(
+            ids.user_id!,
+            ids.thread_id!,
+            {
+                url: sender.url!,
+                data: msg,
+            },
+        );
+    } catch (e) {
+    }
+};
 
 chrome.runtime.onMessage.addListener(async (
     request,
@@ -681,6 +719,13 @@ chrome.runtime.onMessage.addListener(async (
 
     if (request.type === 'xlrd_act_kd_commit') {
         await action_kd_handler.commit();
+    }
+
+    if (request.type === 'xlrd_act_ct') {
+        await process_act_ct(
+            sender,
+            request.data,
+        );
     }
 
     if (request.type == 'xlrd_exp_checkin_ack') {
